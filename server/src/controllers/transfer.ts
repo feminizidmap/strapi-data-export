@@ -83,7 +83,10 @@ const transfer = ({ strapi }: { strapi: Core.Strapi }) => ({
     const options: ExportOptions = {
       uid: body.uid,
       format: body.format === 'csv' ? 'csv' : 'json',
-      status: body.status === 'published' ? 'published' : 'draft',
+      status:
+        body.status === 'published' || body.status === 'draft' || body.status === 'both'
+          ? body.status
+          : 'both',
       locale: body.locale || undefined,
       documentIds: Array.isArray(body.documentIds) ? body.documentIds : undefined,
       filters: body.filters,
@@ -91,6 +94,7 @@ const transfer = ({ strapi }: { strapi: Core.Strapi }) => ({
       limit: body.limit ? Number(body.limit) : undefined,
       relations: bool(body.relations, true),
       media: bool(body.media, true),
+      onlyFirst: bool(body.onlyFirst, false),
     };
 
     try {

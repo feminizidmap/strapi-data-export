@@ -1,6 +1,7 @@
 import type { Core } from '@strapi/strapi';
 
 import type { ExportedDocument, Plan } from '../types';
+import { DISPLAY_FIELDS } from './populate';
 
 /**
  * A document, from what Strapi returns to what belongs in a file.
@@ -21,9 +22,29 @@ const keyOf = (related: unknown): string | null => {
   return null;
 };
 
+/**
+ * What a spreadsheet should show for a relation.
+ *
+ * A display field wins when it is actually filled in. An empty label is not a
+ * value, so the documentId remains, which is also the answer when the target
+ * has none of the display fields.
+ */
+const labelOf = (related: unknown): string | null => {
+  if (related && typeof related === 'object') {
+    const record = related as Record<string, unknown>;
+    for (const field of DISPLAY_FIELDS) {
+      const value = record[field];
+      if (typeof value === 'string' && value.trim() !== '') return value;
+    }
+  }
+  return keyOf(related);
+};
+
 interface Options {
   relations: boolean;
   media: boolean;
+  /** CSV writes the display text. JSON keeps the documentId, so an import can match it. */
+  labels?: boolean;
 }
 
 export const makeSerialiser = (strapi: Core.Strapi) => {
@@ -62,7 +83,11 @@ export const makeSerialiser = (strapi: Core.Strapi) => {
     if (options.relations) {
       for (const relation of plan.relations) {
         if (!(relation.name in value)) continue;
-        out[relation.name] = relationValue(value[relation.name], relation.many);
+        out[relation.name] = relationValue(
+          value[relation.name],
+          relation.many,
+          options.labels === true
+        );
       }
     }
 
@@ -98,16 +123,18 @@ export const makeSerialiser = (strapi: Core.Strapi) => {
    * is free to return it differently on two identical machines. An unsorted
    * list here is a file that shows a spurious change on every export.
    */
-  const relationValue = (value: any, many: boolean): unknown => {
+  const relationValue = (value: any, many: boolean, labels: boolean): unknown => {
+    const one = labels ? labelOf : keyOf;
+
     if (many) {
       const list = Array.isArray(value) ? value : value ? [value] : [];
       return list
-        .map(keyOf)
+        .map(one)
         .filter((key): key is string => key !== null)
         .sort();
     }
 
-    return keyOf(Array.isArray(value) ? value[0] : value);
+    return one(Array.isArray(value) ? value[0] : value);
   };
 
   /**
@@ -170,7 +197,11 @@ export const makeSerialiser = (strapi: Core.Strapi) => {
     if (options.relations) {
       for (const relation of plan.relations) {
         if (!(relation.name in raw)) continue;
-        out[relation.name] = relationValue(raw[relation.name], relation.many);
+        out[relation.name] = relationValue(
+          raw[relation.name],
+          relation.many,
+          options.labels === true
+        );
       }
     }
 

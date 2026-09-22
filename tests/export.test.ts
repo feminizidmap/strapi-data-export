@@ -235,24 +235,30 @@ describe('the file itself', () => {
   it('18. names what it is, so a reader knows what they have', async () => {
     const archive = await archiveOf();
 
-    expect(archive).toMatchObject({ ferry: 1, contentType: ARTICLE, status: 'draft' });
+    expect(archive).toMatchObject({ ferry: 1, contentType: ARTICLE, status: 'both' });
+    expect(archive.documents.every((document) => document.status === 'draft')).toBe(true);
     expect(archive.count).toBe(archive.documents.length);
   });
 });
 
 describe('csv', () => {
-  it('19. writes the flat fields, and says what it left behind', async () => {
-    const result = await run({ uid: ARTICLE, format: 'csv' });
+  it('19. writes nested components, relations and media as colon paths', async () => {
+    const result = await run({ uid: ARTICLE, format: 'csv', status: 'draft' });
 
     expect(result.filename).toBe('article.csv');
     expect(result.body).toContain('documentId');
     expect(result.body).toContain('The first one');
-    expect(result.warnings.join(' ')).toContain('seo');
-    expect(result.warnings.join(' ')).toContain('blocks');
+    expect(result.body).toContain('seo:metaTitle');
+    expect(result.body).toContain('seo:canonical:href');
+    expect(result.body).toContain('seo:owner');
+    expect(result.body).toContain('blocks:1:__component');
+    expect(result.body).toContain('blocks:1:body');
+    expect(result.body).toContain('cover:hash');
+    expect(result.warnings.join(' ')).not.toContain('flat fields');
   });
 
   it('20. writes a to-many relation as one cell of keys', async () => {
-    const result = await run({ uid: ARTICLE, format: 'csv' });
+    const result = await run({ uid: ARTICLE, format: 'csv', status: 'draft' });
 
     expect(result.body).toContain(`"${[tagOne.documentId, tagTwo.documentId].sort().join(',')}"`);
   });

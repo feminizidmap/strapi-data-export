@@ -118,7 +118,7 @@ export const ExportPanel = ({ contentTypes }: Props) => {
               onChange={(value: string | number) => update({ format: value as Format })}
             >
               <SingleSelectOption value="json">JSON - everything</SingleSelectOption>
-              <SingleSelectOption value="csv">CSV - flat fields</SingleSelectOption>
+              <SingleSelectOption value="csv">CSV</SingleSelectOption>
             </SingleSelect>
           </Field.Root>
         </Box>
@@ -133,6 +133,7 @@ export const ExportPanel = ({ contentTypes }: Props) => {
             >
               <SingleSelectOption value="draft">Draft</SingleSelectOption>
               <SingleSelectOption value="published">Published</SingleSelectOption>
+              <SingleSelectOption value="both">Both</SingleSelectOption>
             </SingleSelect>
           </Field.Root>
         </Box>
@@ -151,14 +152,19 @@ export const ExportPanel = ({ contentTypes }: Props) => {
         >
           Media references
         </Checkbox>
+        {options.format === 'csv' && (
+          <Checkbox
+            checked={options.onlyFirst}
+            onCheckedChange={(value: boolean) => update({ onlyFirst: Boolean(value) })}
+          >
+            export only first of multiple items
+          </Checkbox>
+        )}
       </Flex>
 
       {carries.length > 0 && (
         <Typography variant="pi" textColor="neutral600">
           Carries {carries.join(', ')}.
-          {options.format === 'csv' && (plan?.components.length || plan?.dynamicZones.length)
-            ? ' CSV leaves components and dynamic zones behind - use JSON to keep them.'
-            : ''}
         </Typography>
       )}
 

@@ -13,9 +13,19 @@ const MAX_DEPTH = 10;
 /** Enough of a file to identify it on the far side without carrying the bytes. */
 export const MEDIA_FIELDS = ['name', 'url', 'hash', 'ext', 'mime', 'size'];
 
+/**
+ * The readable field on a related document, first match wins.
+ *
+ * Dropdowns in this project store that text in `label`. A city does not: it
+ * has `city_name_display` and `city_name`. Anything else keeps its documentId.
+ */
+export const DISPLAY_FIELDS = ['label', 'name', 'title', 'city_name_display', 'city_name'] as const;
+
 interface Options {
   relations: boolean;
   media: boolean;
+  /** Ask for a display field as well as documentId. CSV only; JSON stays an id. */
+  labels?: boolean;
 }
 
 /**
@@ -41,9 +51,17 @@ export const buildPopulate = (
 
   if (options.relations) {
     for (const relation of plan.relations) {
-      // Only the key travels. The related document exports itself, in its own
-      // file, on its own terms.
-      populate[relation.name] = { fields: ['documentId'] };
+      // The key always travels: it is what an import matches on. A CSV also
+      // asks for one readable field, when the target has one, so a spreadsheet
+      // shows "Hessen" rather than a documentId. The related document still
+      // exports itself, in its own file, on its own terms.
+      const attributes = schema.model(relation.target)?.attributes ?? {};
+      const display = options.labels
+        ? DISPLAY_FIELDS.find((name) => name in attributes)
+        : undefined;
+      populate[relation.name] = {
+        fields: display ? ['documentId', display] : ['documentId'],
+      };
     }
   }
 

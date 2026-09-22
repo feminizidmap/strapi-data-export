@@ -3,6 +3,7 @@ import * as React from 'react';
 import { useFetchClient } from '@strapi/admin/strapi-admin';
 import {
   Button,
+  Checkbox,
   Field,
   Flex,
   Modal,
@@ -30,9 +31,9 @@ import {
  * asks the same questions but means something different each time is worse
  * than two dialogs.
  *
- * Only format and status are offered. The full page keeps the rest: relations
- * and media are defaults nobody changes per export, and a list view is not the
- * place to relearn them.
+ * Format, status, and — for CSV — whether a repeatable keeps only its first
+ * entry. The full page keeps the rest: relations and media are defaults nobody
+ * changes per export, and a list view is not the place to relearn them.
  */
 export const ExportScopeDialog = ({
   /** What is being exported, in words, e.g. "3 selected entries". */
@@ -51,6 +52,7 @@ export const ExportScopeDialog = ({
 
   const [format, setFormat] = React.useState<Format>(DEFAULT_EXPORT.format);
   const [status, setStatus] = React.useState<Status>(DEFAULT_EXPORT.status);
+  const [onlyFirst, setOnlyFirst] = React.useState(DEFAULT_EXPORT.onlyFirst);
   const [busy, setBusy] = React.useState(false);
   const [error, setError] = React.useState<string | null>(null);
   const [warnings, setWarnings] = React.useState<string[]>([]);
@@ -71,6 +73,7 @@ export const ExportScopeDialog = ({
         ...request,
         format,
         status,
+        onlyFirst: format === 'csv' && onlyFirst,
         envelope: true,
       });
 
@@ -123,8 +126,19 @@ export const ExportScopeDialog = ({
             >
               <SingleSelectOption value="draft">Draft</SingleSelectOption>
               <SingleSelectOption value="published">Published</SingleSelectOption>
+              <SingleSelectOption value="both">Both</SingleSelectOption>
             </SingleSelect>
           </Field.Root>
+
+          {format === 'csv' ? (
+            <Checkbox
+              checked={onlyFirst}
+              disabled={busy}
+              onCheckedChange={(value: boolean) => setOnlyFirst(Boolean(value))}
+            >
+              export only first of multiple items
+            </Checkbox>
+          ) : null}
 
           {warnings.length > 0 ? (
             <Flex direction="column" alignItems="flex-start" gap={1}>

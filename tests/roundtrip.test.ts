@@ -213,10 +213,11 @@ describe('out and back as a spreadsheet', () => {
     expect((await exportOf(ARTICLE, 'csv')).body).toBe(before.body);
   });
 
-  it('6. leaves the fields CSV cannot carry exactly as they were', async () => {
-    // The CSV import above wrote every row. Nothing it could not describe may
-    // have been cleared as a side effect - which is the whole reason a blank
-    // cell means "leave alone" rather than "empty this".
+  it('6. leaves the fields CSV import does not write exactly as they were', async () => {
+    // The CSV import above wrote every row. Nested columns are export-only, so
+    // the importer ignores them, and a blank cell still means "leave alone"
+    // rather than "empty this". Nothing the spreadsheet did not update may
+    // have been cleared as a side effect.
     const article = await strapi.documents(ARTICLE).findOne({
       documentId: 'ferryarticleone000001',
       populate: {
