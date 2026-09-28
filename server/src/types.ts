@@ -1,8 +1,13 @@
 /** What a file is written as, and read back from. */
 export type Format = 'json' | 'csv';
 
-/** Which version of a document to move. */
-export type Status = 'draft' | 'published';
+/**
+ * Which version of a document to move.
+ *
+ * `both` is export-only: draft and published copies in one file. Import still
+ * takes a single version.
+ */
+export type Status = 'draft' | 'published' | 'both';
 
 /**
  * A field, sorted into the one bucket that decides how it travels.
@@ -67,6 +72,11 @@ export interface ExportOptions {
   limit?: number;
   relations: boolean;
   media: boolean;
+  /**
+   * Repeatable components: keep the first entry and name the column
+   * `victim:firstname` rather than `victim:1:firstname`. CSV only.
+   */
+  onlyFirst: boolean;
 }
 
 /** A document as it appears in a file: plain data, keyed by documentId. */

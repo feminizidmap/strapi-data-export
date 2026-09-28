@@ -72,7 +72,8 @@ describe('export', () => {
 
     expect(ctx.body.count).toBe(1);
     expect(Array.isArray(ctx.body.warnings)).toBe(true);
-    expect(ctx.body.warnings.join(' ')).toContain('CSV');
+    expect(ctx.body.body).toContain('One');
+    expect(ctx.body.warnings.join(' ')).not.toContain('flat fields');
   });
 
   it('3. still serves a real download for anything that is not a browser', async () => {

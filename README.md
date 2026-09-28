@@ -167,9 +167,19 @@ round trip. It reads a **semicolon** file, which is what a spreadsheet saves in
 every locale that uses a comma for decimals, and writes a byte order mark so
 Excel opens UTF-8 as UTF-8.
 
-CSV carries flat fields and relation keys. Components and dynamic zones are left
-out, and the export says which ones by name rather than writing a JSON blob into
-a spreadsheet cell that no one can edit. Use JSON when you want everything.
+CSV carries the same content as JSON, flattened. A nested field becomes a column
+named by the path that led to it, joined with `:`. A repeatable component or a
+dynamic zone keeps its order as a number: `victim:0:firstname`,
+`blocks:0:__component`, `seo:canonical:href`. A to-many relation stays one cell
+of comma-separated `documentId`s. A `json` value stays one cell.
+
+The Version control can be Draft, Published, or Both. Both writes every version
+into the same file and adds a `status` column so the two copies of one
+`documentId` stay distinct.
+
+Import still reads only the flat columns it always did. A `:` column is reported
+as unrecognised and left untouched, so a spreadsheet export is not a round trip.
+Use JSON when the file has to come back in.
 
 One rule worth knowing: **a blank cell means "leave this alone"**, not "empty
 this field". CSV cannot tell the two apart, and the safe reading is the one that

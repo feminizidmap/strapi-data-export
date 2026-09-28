@@ -1,7 +1,7 @@
 import { PLUGIN_ID } from './pluginId';
 
 export type Format = 'json' | 'csv';
-export type Status = 'draft' | 'published';
+export type Status = 'draft' | 'published' | 'both';
 
 export interface CatalogueEntry {
   uid: string;
@@ -64,6 +64,8 @@ export interface ExportRequest {
   status: Status;
   relations: boolean;
   media: boolean;
+  /** CSV: first entry of each repeatable component, with no index in the column name. */
+  onlyFirst: boolean;
   /** Export exactly these documents - the Content Manager's selected rows. */
   documentIds?: string[];
   /**
@@ -88,9 +90,10 @@ export interface ImportRequest {
 
 export const DEFAULT_EXPORT: Omit<ExportRequest, 'uid'> = {
   format: 'json',
-  status: 'draft',
+  status: 'both',
   relations: true,
   media: true,
+  onlyFirst: false,
 };
 
 export const DEFAULT_IMPORT: Omit<ImportRequest, 'uid'> = {
